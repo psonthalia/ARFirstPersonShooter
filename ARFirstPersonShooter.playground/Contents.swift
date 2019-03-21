@@ -25,6 +25,8 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
     var skLabel:SKLabelNode!
     var ammoCount:Int = 0
     var hasGun = 0
+    var handLeft:SKSpriteNode!
+    var handRight:SKSpriteNode!
 
     override func loadView() {
         size = CGRect(x: 0.0, y: 0.0, width: 500.0, height: 600.0)
@@ -55,9 +57,19 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         skLabel.fontName =  "Helvetica"
         skLabel.position = CGPoint(x: 240, y: 300)
         sk.addChild(skLabel)
+        
+        handLeft = SKSpriteNode(imageNamed: "Art.scnassets/images/handLeft.png")
+        handLeft.position = CGPoint(x: 70, y: 150)
+        sk.addChild(handLeft)
+        
+        handRight = SKSpriteNode(imageNamed: "Art.scnassets/images/handRight.png")
+        handRight.position = CGPoint(x: size.width - 70, y: 150)
+        sk.addChild(handRight)
+        
+        
         sceneView.overlaySKScene = sk
         
-        Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(self.animateSoldiers), userInfo: nil, repeats: true)
+        Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(self.animateSoldiers), userInfo: nil, repeats: true)
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(rec:)))
         sceneView.addGestureRecognizer(tap)
@@ -110,7 +122,7 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
     }
     
     @objc func animateSoldiers() {
-//      if self.soldiersPlacedCount >= self.numberOfSoldiers {
+//        if soldiersPlacedCount >= numberOfSoldiers && gunsPlacedCount >= numberOfGuns && ammoBoxPlacedCount >= numberOfAmmoBoxes {
 //          for node in self.allNodesSet {
 //              if node.name!.contains("soldier") {
 //                  node.position = SCNVector3(x: node.position.x + 0.01, y: node.position.y, z: node.position.z)
@@ -148,9 +160,16 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                         tappedNode!.removeFromParentNode()
                         self.hasGun = 1
                         self.ammoCount += 2
-                        let gunImage = SKSpriteNode(imageNamed: "Art.scnassets/images/gun.png")
-                        gunImage.position = CGPoint(x: size.width - 100, y: 0)
-                        self.sk.addChild(gunImage)
+//                        let gunImage = SKSpriteNode(imageNamed: "Art.scnassets/images/gun.png")
+//                        gunImage.position = CGPoint(x: size.width - 100, y: 0)
+//                        self.sk.addChild(gunImage)
+                        handLeft.removeFromParent()
+                        handRight.removeFromParent()
+                        
+                        let handGun = SKSpriteNode(imageNamed: "Art.scnassets/images/gunHolding.png")
+                        handGun.position = CGPoint(x: 70, y: 150)
+                        sk.addChild(handGun)
+                        
                         updateAmmo()
                     } else if tappedNode!.name!.contains("ammoBox") && self.hasGun == 1 {
                         allNodesSet.remove(tappedNode!)
