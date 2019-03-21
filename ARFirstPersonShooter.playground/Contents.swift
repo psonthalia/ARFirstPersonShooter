@@ -9,9 +9,6 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
     var sceneView: ARSCNView!
     var size:CGRect!
     
-//    var numberOfSoldiers = 0;
-//    var soldiersPlacedCount = 0;
-    
     var numberOfEnemies = 1;
     var enemyPlacedCount = 0;
     var numberOfGuns = 1;
@@ -66,7 +63,8 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         skAmmoLabel = SKLabelNode(text: "")
         skAmmoLabel.fontColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
         skAmmoLabel.fontName =  "Helvetica"
-        skAmmoLabel.position = CGPoint(x: size.width - 50, y: 300)
+        skAmmoLabel.fontSize = 18
+        skAmmoLabel.position = CGPoint(x: size.width - 50, y: size.height - 10)
         sk.addChild(skAmmoLabel)
         
         handLeft = SKSpriteNode(imageNamed: "Art.scnassets/images/handLeft.png")
@@ -119,23 +117,24 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         }
     }
     
-//    func session(_ session: ARSession, didUpdate frame: ARFrame) {
-        // Do something with the new transform
-//        for node in self.allNodesSet {
-//            if node != nil && node.name!.contains("soldier") {
-//                let pitch = sceneView.session.currentFrame?.camera.eulerAngles.x
-//                let yawn = sceneView.session.currentFrame?.camera.eulerAngles.y
-//                let roll = sceneView.session.currentFrame?.camera.eulerAngles.z
-//                let newRotation = SCNVector3Make(pitch!, yawn!, roll!)
-//                node.eulerAngles = newRotation
-//            }
-//        }
-//    }
+    func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        if enemyPlacedCount >= numberOfEnemies && gunsPlacedCount >= numberOfGuns && ammoBoxPlacedCount >= numberOfAmmoBoxes {
+            for node in self.allNodesSet {
+                if node != nil && node.name!.contains("enemy") {
+                    let yaw = sceneView.session.currentFrame?.camera.eulerAngles.y
+                    node.eulerAngles.y = yaw!
+                    node.position.x = node.position.x + 0.001*sin(yaw!)
+                    node.position.y = node.position.y + 0.001*cos(yaw!)
+
+                }
+            }
+        }
+    }
     
 //    @objc func animateSoldiers() {
-//        if soldiersPlacedCount >= numberOfSoldiers && gunsPlacedCount >= numberOfGuns && ammoBoxPlacedCount >= numberOfAmmoBoxes {
+//        if enemyPlacedCount >= numberOfEnemies && gunsPlacedCount >= numberOfGuns && ammoBoxPlacedCount >= numberOfAmmoBoxes {
 //          for node in self.allNodesSet {
-//              if node.name!.contains("soldier") {
+//              if node.name!.contains("enemy") {
 ////                  node.position = SCNVector3(x: node.position.x + 0.01, y: node.position.y, z: node.position.z)
 //
 //                  let pitch = sceneView.session.currentFrame?.camera.eulerAngles.x
@@ -155,8 +154,17 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
             
             if self.hasGun == 1 && self.ammoCount > 0 {
                 self.ammoCount -= 1
-                self.updateAmmo()
-                self.shotFired()
+                skAmmoLabel.text = "Ammo: " + String(self.ammoCount)
+//                self.shotFired()
+                
+                let shotNode = SKSpriteNode(imageNamed: "Art.scnassets/images/shot.png")
+                shotNode.position = CGPoint(x: 240, y: 310)
+                sk.addChild(shotNode)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    shotNode.removeFromParent()
+                }
+
+                
                 if self.ammoCount == 0 && self.ammoBoxSet.count > 0 {
                     self.sceneView.scene.rootNode.addChildNode(self.ammoBoxSet.removeFirst())
                 }
@@ -182,29 +190,17 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                         
                         self.hasGun = 1
                         self.ammoCount += 2
-                        updateAmmo()
+                        skAmmoLabel.text = "Ammo: " + String(self.ammoCount)
+
+//                        updateAmmo()
                     } else if tappedNode!.name!.contains("ammoBox") && self.hasGun == 1 {
                         allNodesSet.remove(tappedNode!)
                         tappedNode!.removeFromParentNode()
                         self.ammoCount += 2
-                        updateAmmo()
+                        skAmmoLabel.text = "Ammo: " + String(self.ammoCount)
                     }
                 }
             }
-        }
-    }
-    
-    func updateAmmo() {
-//          for i in sk.children {
-//              if i.name == "bullet" {
-//                  i.removeFromParent()
-//              }
-//          }
-        for i in 0..<self.ammoCount {
-            let bullet = SKSpriteNode(imageNamed: "Art.scnassets/images/bullet.png")
-            bullet.name = "bullet " + String(i)
-            bullet.position = CGPoint(x: (size.width - 10 - CGFloat(i * 6)), y: size.height - 15)
-//              sk.addChild(bullet)
         }
     }
     
