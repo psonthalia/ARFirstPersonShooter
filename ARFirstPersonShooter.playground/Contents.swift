@@ -7,17 +7,28 @@ import ARKit
 class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     let session = ARSession()
     var sceneView: ARSCNView!
-    var cameraNode = SCNNode()
+    var size:CGRect!
     
-    var numberOfSoldiers = 2;
+    var numberOfSoldiers = 0;
     var soldiersPlacedCount = 0;
+    var numberOfGuns = 1;
+    var gunsPlacedCount = 0;
+    var numberOfAmmoBoxes = 1;
+    var ammoBoxPlacedCount = 0;
+
     var allNodesSet = Set<SCNNode>()
-//    var gun1: SCNNode?
-//    var gun2: SCNNode?
-//    var gun3: SCNNode?
+    var ammoBoxSet = Set<SCNNode>()
+    var currentGunsList:[SCNNode?] = []
+    var currentGun:Int = 0
+    
+    var sk:SKScene!
+    var skLabel:SKLabelNode!
+    var ammoCount:Int = 0
+    var hasGun = 0
 
     override func loadView() {
-        sceneView = ARSCNView(frame: CGRect(x: 0.0, y: 0.0, width: 500.0, height: 600.0))
+        size = CGRect(x: 0.0, y: 0.0, width: 500.0, height: 600.0)
+        sceneView = ARSCNView(frame: size)
         
         let scene = SCNScene()
         sceneView.scene = scene
@@ -33,17 +44,25 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         sceneView.autoenablesDefaultLighting = true
         sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints]
         
+        let cameraNode = SCNNode()
         cameraNode.camera = SCNCamera()
         cameraNode.position = SCNVector3(x: 0, y: 0, z: 3)
         scene.rootNode.addChildNode(cameraNode)
         
+        sk = SKScene(size: CGSize(width: size.width, height: size.height))
+        skLabel = SKLabelNode(text: "Keep Scanning Surroundings")
+        skLabel.fontColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
+        skLabel.fontName =  "Helvetica"
+        skLabel.position = CGPoint(x: 240, y: 300)
+        sk.addChild(skLabel)
+        sceneView.overlaySKScene = sk
+        
+        Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(self.animateSoldiers), userInfo: nil, repeats: true)
+        
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(rec:)))
         sceneView.addGestureRecognizer(tap)
         
-//        self.gun1 = self.gun1Node("gun1")
-//        gun2 = gun2Node("gun2")
-//        self.gun3 = self.gun3Node("gun3")
-
+        sceneView.scene.rootNode.name = "aaa"
         
         self.view = sceneView
         sceneView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
@@ -55,82 +74,129 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                 let soldier = soldierNode("soldier " + String(soldiersPlacedCount))
                 soldier.position = SCNVector3(anchor.transform.columns.3.x, anchor.transform.columns.3.y, anchor.transform.columns.3.z)
                 self.sceneView.scene.rootNode.addChildNode(soldier)
-                
                 self.allNodesSet.insert(soldier)
                 self.soldiersPlacedCount += 1
-            } else {
-                if (soldiersPlacedCount < (numberOfSoldiers + 3)) {
-                    var gun1 = self.gun1Node("gun1")
-                    gun1.position = SCNVector3(anchor.transform.columns.3.x - 1, anchor.transform.columns.3.y, anchor.transform.columns.3.z)
-                    self.sceneView.scene.rootNode.addChildNode(gun1)
-                    self.allNodesSet.insert(gun1)
-                    self.soldiersPlacedCount += 1
+            } else if (gunsPlacedCount < numberOfGuns) {
+                let gun = self.gunNode("gun")
+                gun.position = SCNVector3(anchor.transform.columns.3.x, anchor.transform.columns.3.y, anchor.transform.columns.3.z)
+                self.sceneView.scene.rootNode.addChildNode(gun)
+                self.allNodesSet.insert(gun)
+                self.gunsPlacedCount += 1
+            } else if (ammoBoxPlacedCount < numberOfAmmoBoxes) {
+                let box = self.ammoBoxNode("ammoBox " + String(ammoBoxPlacedCount))
+                box.position = SCNVector3(anchor.transform.columns.3.x, anchor.transform.columns.3.y, anchor.transform.columns.3.z)
+                self.allNodesSet.insert(box)
+                self.ammoBoxSet.insert(box)
+                self.ammoBoxPlacedCount += 1
+                
+                if self.ammoBoxPlacedCount == self.numberOfAmmoBoxes {
+                    skLabel.removeFromParent()
                 }
-//                else if (!allNodesSet.contains(gun2!)) {
-//                    gun2!.position = SCNVector3(anchor.transform.columns.3.x - 1, anchor.transform.columns.3.y, anchor.transform.columns.3.z)
-//                    self.sceneView.scene.rootNode.addChildNode(gun2!)
-//                    self.allNodesSet.insert(gun2!)
-//                }
-//                else if (!self.allNodesSet.contains(self.gun3!)) {
-//                    self.gun3!.position = SCNVector3(anchor.transform.columns.3.x - 1, anchor.transform.columns.3.y, anchor.transform.columns.3.z)
-//                    self.sceneView.scene.rootNode.addChildNode(self.gun3!)
-//                    self.allNodesSet.insert(self.gun3!)
-//                }
             }
         }
     }
+    
+    func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        // Do something with the new transform
+//        for node in self.allNodesSet {
+//            if node != nil && node.name!.contains("soldier") {
+//                let pitch = sceneView.session.currentFrame?.camera.eulerAngles.x
+//                let yawn = sceneView.session.currentFrame?.camera.eulerAngles.y
+//                let roll = sceneView.session.currentFrame?.camera.eulerAngles.z
+//                let newRotation = SCNVector3Make(pitch!, yawn!, roll!)
+//                node.eulerAngles = newRotation
+//            }
+//        }
+    }
+    
+    @objc func animateSoldiers() {
+//      if self.soldiersPlacedCount >= self.numberOfSoldiers {
+//          for node in self.allNodesSet {
+//              if node.name!.contains("soldier") {
+//                  node.position = SCNVector3(x: node.position.x + 0.01, y: node.position.y, z: node.position.z)
+//
+//                  let pitch = sceneView.session.currentFrame?.camera.eulerAngles.x
+//                  let yawn = sceneView.session.currentFrame?.camera.eulerAngles.y
+//                  let roll = sceneView.session.currentFrame?.camera.eulerAngles.z
+//                  let newRotation = SCNVector3Make(pitch!, yawn!, roll!)
+//                  node.eulerAngles = newRotation
+//              }
+//          }
+//      }
+    }
 
     @objc func handleTap(rec: UITapGestureRecognizer) {
-        if soldiersPlacedCount >= numberOfSoldiers {
+        if rec.state == .ended && soldiersPlacedCount >= numberOfSoldiers && gunsPlacedCount >= numberOfGuns && ammoBoxPlacedCount >= numberOfAmmoBoxes {
             let location: CGPoint = rec.location(in: sceneView)
+            if self.hasGun == 1 && self.ammoCount > 0 {
+                self.ammoCount -= 1
+                updateAmmo()
+                if self.ammoCount == 0 && self.ammoBoxSet.count > 0 {
+                    self.sceneView.scene.rootNode.addChildNode(self.ammoBoxSet.removeFirst())
+                }
+            }
             let hits = sceneView.hitTest(location, options: nil)
             if !hits.isEmpty {
-                for hit in hits {
-                    let tappedNode = hit.node
-                    if (allNodesSet.contains(tappedNode)) {
-                        allNodesSet.remove(tappedNode)
-                        tappedNode.removeFromParentNode()
+                let tappedNode:SCNNode? = hits.last?.node
+                if (allNodesSet.contains(tappedNode!)) {
+                    if tappedNode!.name!.contains("soldier") && self.hasGun == 1 {
+                        allNodesSet.remove(tappedNode!)
+                        tappedNode!.removeFromParentNode()
+                    }
+                    else if tappedNode!.name!.contains("gun") {
+                        allNodesSet.remove(tappedNode!)
+                        tappedNode!.removeFromParentNode()
+                        self.hasGun = 1
+                        self.ammoCount += 2
+                        let gunImage = SKSpriteNode(imageNamed: "Art.scnassets/images/gun.png")
+                        gunImage.position = CGPoint(x: size.width - 100, y: 0)
+                        self.sk.addChild(gunImage)
+                        updateAmmo()
+                    } else if tappedNode!.name!.contains("ammoBox") && self.hasGun == 1 {
+                        allNodesSet.remove(tappedNode!)
+                        tappedNode!.removeFromParentNode()
+                        self.ammoCount += 2
+                        updateAmmo()
                     }
                 }
-                
             }
         }
     }
 
     func soldierNode(_ name: String) -> SCNNode {
-        let soldierScene = SCNScene(named: "Art.scnassets/character/soldier.scn")!
-        let soldier = soldierScene.rootNode.childNode(withName: "soldier", recursively: true)!
-        soldier.name = name
-        soldier.scale = SCNVector3(x: 0.05, y: 0.05, z: 0.05)
-        return soldier
-    }
-    
-//    func gun1Node(_ name: String) -> SCNNode {
-//        let scene = SCNScene(named: "Art.scnassets/gun1/gun1.scn")!
-//        let node = scene.rootNode.childNode(withName: "gun1", recursively: true)!
-//        node.geometry?.firstMaterial?.diffuse.contents = "Art.scnassets/gun1/Tex_0004_1.png"
-//        node.name = name
-//        node.eulerAngles = SCNVector3(0, 90, 0)
-//        node.scale = SCNVector3(x: 0.005, y: 0.005, z: 0.005)
-//        return node
-//    }
-    func gun1Node(_ name: String) -> SCNNode {
-        let scene = SCNScene(named: "Art.scnassets/gun2/gun2.scn")!
-        let node = scene.rootNode.childNode(withName: "gun2", recursively: true)!
+        let scene = SCNScene(named: "Art.scnassets/character/soldier.scn")!
+        let node = scene.rootNode.childNode(withName: "soldier", recursively: true)!
         node.name = name
-        node.eulerAngles = SCNVector3(0, 0, 90)
-//        node.scale = SCNVector3(x: 0.05, y: 0.05, z: 0.05)
+        node.scale = SCNVector3(x: 0.05, y: 0.05, z: 0.05)
         return node
     }
-    func gun3Node(_ name: String) -> SCNNode {
-        let scene = SCNScene(named: "Art.scnassets/gun3/gun3.scn")!
-        let node = scene.rootNode.childNode(withName: "gun3", recursively: true)!
+    func gunNode(_ name: String) -> SCNNode {
+        let scene = SCNScene(named: "Art.scnassets/gun/gun.scn")!
+        let node = scene.rootNode.childNode(withName: "gun", recursively: true)!
         node.name = name
         node.eulerAngles = SCNVector3(0, 0, 90)
-        node.scale = SCNVector3(x: 0.002, y: 0.002, z: 0.002)
+        return node
+    }
+    func ammoBoxNode(_ name: String) -> SCNNode {
+        let scene = SCNScene(named: "Art.scnassets/box/box.scn")!
+        let node = scene.rootNode.childNode(withName: "box", recursively: true)!
+        node.name = name
         return node
     }
     
+    func updateAmmo() {
+        for i in sk.children {
+            if (i.name == "bullet") {
+                i.removeFromParent()
+            }
+        }
+        for i in 0..<self.ammoCount {
+            let bullet = SKSpriteNode(imageNamed: "Art.scnassets/images/bullet.png")
+            bullet.name = "bullet"
+            bullet.position = CGPoint(x: (size.width - 10 - CGFloat(i * 6)), y: size.height - 15)
+            sk.addChild(bullet)
+        }
+    }
     
 //    public func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
 //        DispatchQueue.main.async {
