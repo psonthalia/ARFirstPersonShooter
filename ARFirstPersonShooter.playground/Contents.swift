@@ -10,6 +10,7 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
     var allNodesSet = Set<SCNNode>()
     var skLabelNodesSet = Set<SKLabelNode>()
     var skSpriteNodesSet = Set<SKSpriteNode>()
+    var skShapeNodesSet = Set<SKShapeNode>()
 
     var numberOfEnemies = 2
     var enemyPlacedCount = 0
@@ -34,6 +35,7 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         bg.fillColor = SKColor.white
         bg.position = CGPoint(x: size.width / 2, y: size.height / 2)
         bg.name = "startScreen"
+        skShapeNodesSet.insert(bg)
         sk.addChild(bg)
 
         let welcomeLabel = SKLabelNode(text: "Welcome to my WWDC Submission")
@@ -42,6 +44,7 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         welcomeLabel.fontSize = 25
         welcomeLabel.name = "startScreen"
         welcomeLabel.position = CGPoint(x: size.width / 2, y: size.height - 50)
+        skLabelNodesSet.insert(welcomeLabel)
         sk.addChild(welcomeLabel)
         
         let contentLabel = SKLabelNode(text: "This is an Augmented Reality First Person Shooter game in which you need to kill all of the aliens before time runs out. Here is how you are going to do that:\n\n" +
@@ -58,6 +61,7 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         contentLabel.preferredMaxLayoutWidth = 470
         contentLabel.name = "startScreen"
         contentLabel.position = CGPoint(x: size.width / 2, y: size.height - 560)
+        skLabelNodesSet.insert(contentLabel)
         sk.addChild(contentLabel)
         
         
@@ -66,33 +70,29 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         bgBlack.fillColor = SKColor.black
         bgBlack.position = CGPoint(x: size.width / 2, y: size.height / 2)
         bgBlack.name = "endScreenWin"
-        bgBlack.isHidden = true
-        sk.addChild(bgBlack)
+        skShapeNodesSet.insert(bgBlack)
         
         let bgBlack2 = SKShapeNode(rectOf: CGSize(width: size.width, height: size.height))
         bgBlack2.fillColor = SKColor.black
         bgBlack2.position = CGPoint(x: size.width / 2, y: size.height / 2)
         bgBlack2.name = "endScreenLose"
-        bgBlack2.isHidden = true
-        sk.addChild(bgBlack2)
+        skShapeNodesSet.insert(bgBlack2)
         
         let winLabel = SKLabelNode(text: "YOU HAVE WON!")
         winLabel.fontColor = UIColor(red: 0, green: 255, blue: 0, alpha: 1)
         winLabel.fontName =  "Helvetica"
         winLabel.fontSize = 27
         winLabel.name = "endScreenWin"
-        winLabel.isHidden = true
         winLabel.position = CGPoint(x: size.width / 2, y: size.height / 2)
-        sk.addChild(winLabel)
+        skLabelNodesSet.insert(winLabel)
 
         let loseLabel = SKLabelNode(text: "YOU HAVE FAILED")
         loseLabel.fontColor = UIColor(red: 255, green: 0, blue: 0, alpha: 1)
         loseLabel.fontName =  "Helvetica"
         loseLabel.fontSize = 27
         loseLabel.name = "endScreenLose"
-        loseLabel.isHidden = true
         loseLabel.position = CGPoint(x: size.width / 2, y: size.height / 2)
-        sk.addChild(loseLabel)
+        skLabelNodesSet.insert(loseLabel)
         
         let config = ARWorldTrackingConfiguration()
         config.planeDetection = .horizontal
@@ -102,7 +102,6 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         sceneView.showsStatistics = true
         sceneView.session.delegate = self
         sceneView.autoenablesDefaultLighting = true
-        sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints]
         
         let cameraNode = SCNNode()
         cameraNode.camera = SCNCamera()
@@ -113,26 +112,21 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         keepScanningLabel.fontColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
         keepScanningLabel.fontName =  "Helvetica"
         keepScanningLabel.position = CGPoint(x: 240, y: 300)
-        keepScanningLabel.isHidden = true
         keepScanningLabel.name = "gameKeepScanning"
-        sk.addChild(keepScanningLabel)
         skLabelNodesSet.insert(keepScanningLabel)
         
         let topBar = SKShapeNode(rectOf: CGSize(width: size.width, height: 25))
         topBar.fillColor = SKColor.white
         topBar.position = CGPoint(x: size.width / 2, y: size.height - 12)
-        topBar.name = "game"
-        topBar.isHidden = true
-        sk.addChild(topBar)
+        topBar.name = "gameTopBar"
+        skShapeNodesSet.insert(topBar)
         
         let skAmmoLabel = SKLabelNode(text: "Ammo: 0")
         skAmmoLabel.fontColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
         skAmmoLabel.fontName =  "Helvetica"
         skAmmoLabel.fontSize = 17
         skAmmoLabel.position = CGPoint(x: size.width - 50, y: size.height - 20)
-        skAmmoLabel.isHidden = true
         skAmmoLabel.name = "gameAmmoLabel"
-        sk.addChild(skAmmoLabel)
         skLabelNodesSet.insert(skAmmoLabel)
 
         let timeRemaining = SKLabelNode(text: "Time Left: " + String(timeRemainingCount) + "   Enemies Left: " + String(enemiesLeft))
@@ -140,23 +134,17 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         timeRemaining.fontName =  "Helvetica"
         timeRemaining.fontSize = 17
         timeRemaining.position = CGPoint(x: 130, y: size.height - 20)
-        timeRemaining.isHidden = true
         timeRemaining.name = "gameTimeRemaining"
-        sk.addChild(timeRemaining)
         skLabelNodesSet.insert(timeRemaining)
 
         let handLeft = SKSpriteNode(imageNamed: "Art.scnassets/images/handLeft.png")
         handLeft.position = CGPoint(x: 70, y: 150)
-        handLeft.isHidden = true
         handLeft.name = "gameHand"
-        sk.addChild(handLeft)
         skSpriteNodesSet.insert(handLeft)
 
         let handRight = SKSpriteNode(imageNamed: "Art.scnassets/images/handRight.png")
         handRight.position = CGPoint(x: size.width - 70, y: 150)
-        handRight.isHidden = true
         handRight.name = "gameHand"
-        sk.addChild(handRight)
         skSpriteNodesSet.insert(handRight)
         
         let handGun = SKSpriteNode(imageNamed: "Art.scnassets/images/gunHolding.png")
@@ -189,25 +177,25 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                     box.position = SCNVector3(anchor.transform.columns.3.x, anchor.transform.columns.3.y, anchor.transform.columns.3.z)
                     self.allNodesSet.insert(box)
                     self.ammoBoxPlacedCount += 1
-                }
-                
-                if self.ammoBoxPlacedCount == self.numberOfAmmoBoxes {
-                    for node in skLabelNodesSet {
-                        if node.name == "gameKeepScanning" {
-                            skLabelNodesSet.remove(node)
-                            node.removeFromParent()
+                    
+                    if self.ammoBoxPlacedCount == self.numberOfAmmoBoxes {
+                        for node in skLabelNodesSet {
+                            if node.name == "gameKeepScanning" {
+                                skLabelNodesSet.remove(node)
+                                node.removeFromParent()
+                            }
                         }
-                    }
-                    let startGameLabel = SKLabelNode(text: "BEGIN")
-                    startGameLabel.position = CGPoint(x: size.width / 2, y: size.height / 2)
-                    startGameLabel.name = "startLabel"
-                    startGameLabel.fontName =  "Helvetica"
-                    startGameLabel.fontSize = 30
-                    sk.addChild(startGameLabel)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                        startGameLabel.removeFromParent()
-                        for node in self.allNodesSet {
-                            self.sceneView.scene.rootNode.addChildNode(node)
+                        let startGameLabel = SKLabelNode(text: "BEGIN")
+                        startGameLabel.position = CGPoint(x: size.width / 2, y: size.height / 2)
+                        startGameLabel.name = "startLabel"
+                        startGameLabel.fontName =  "Helvetica"
+                        startGameLabel.fontSize = 30
+                        sk.addChild(startGameLabel)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            startGameLabel.removeFromParent()
+                            for node in self.allNodesSet {
+                                self.sceneView.scene.rootNode.addChildNode(node)
+                            }
                         }
                     }
                 }
@@ -228,13 +216,31 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                 }
                 
                 if timeRemainingCount == 0 {
-                    for node in sk.children {
+                    for node in skShapeNodesSet {
                         if node.name!.contains("game") {
+                            skShapeNodesSet.remove(node)
                             node.removeFromParent()
                         } else if node.name! == "endScreenLose" {
-                            node.isHidden = false
+                            sk.addChild(node)
                         }
                     }
+                    for node in skLabelNodesSet {
+                        if node.name!.contains("game") {
+                            skLabelNodesSet.remove(node)
+                            node.removeFromParent()
+                        } else if node.name! == "endScreenLose" {
+                            sk.addChild(node)
+                        }
+                    }
+                    for node in skSpriteNodesSet {
+                        if node.name!.contains("game") {
+                            skSpriteNodesSet.remove(node)
+                            node.removeFromParent()
+                        } else if node.name! == "endScreenLose" {
+                            sk.addChild(node)
+                        }
+                    }
+                    
                     gameStage += 1
                 }
             }
@@ -252,17 +258,34 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
     @objc func handleTap(rec: UITapGestureRecognizer) {
         if rec.state == .ended {
             if gameStage == 0 {
-                for node in sk.children {
+                for node in skShapeNodesSet {
                     if node.name! == "startScreen" {
+                        skShapeNodesSet.remove(node)
                         node.removeFromParent()
-                    } else if node.name!.contains("game") {
-                        node.isHidden = false
+                    } else if node.name!.contains("game") && node.name! != "gameHandGun" {
+                        sk.addChild(node)
                     }
                 }
+                for node in skLabelNodesSet {
+                    if node.name! == "startScreen" {
+                        skLabelNodesSet.remove(node)
+                        node.removeFromParent()
+                    } else if node.name!.contains("game") && node.name! != "gameHandGun" {
+                        sk.addChild(node)
+                    }
+                }
+                for node in skSpriteNodesSet {
+                    if node.name! == "startScreen" {
+                        skSpriteNodesSet.remove(node)
+                        node.removeFromParent()
+                    } else if node.name!.contains("game") && node.name! != "gameHandGun" {
+                        sk.addChild(node)
+                    }
+                }
+                
                 gameStage += 1
             }
             if gameStage == 1 && enemyPlacedCount >= numberOfEnemies && gunsPlacedCount >= numberOfGuns && ammoBoxPlacedCount >= numberOfAmmoBoxes {
-                print("a")
                 let location: CGPoint = rec.location(in: sceneView)
                 
                 if self.hasGun >= 1 && self.ammoCount > 0 {
@@ -281,18 +304,14 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                         shotNode.removeFromParent()
                     }
                 }
-                print("b")
-                let hits = sceneView.hitTest(location, options: nil)
-                if !hits.isEmpty {
-                    print("c")
-                    let tappedNode:SCNNode? = hits.last?.node
-                    print(hits.count)
-                    if (tappedNode?.name != nil) {
-                        print("d")
-                        if tappedNode!.name!.contains("enemy") && self.hasGun >= 1 && self.ammoCount > 0 {
-                            allNodesSet.remove(tappedNode!)
+                let hits = sceneView.hitTest(location, options: [.boundingBoxOnly: true, .rootNode: self.sceneView.scene.rootNode])
+                for hit in hits {
+                    let tappedNode:SCNNode = hit.node
+                    if (tappedNode.name != nil) {
+                        if tappedNode.name!.contains("enemy") && self.hasGun >= 1 && self.ammoCount > 0 {
+                            allNodesSet.remove(tappedNode)
                             DispatchQueue.main.async {
-                                tappedNode!.removeFromParentNode()
+                                tappedNode.removeFromParentNode()
                             }
                             enemiesLeft -= 1
                             for node in skLabelNodesSet {
@@ -302,31 +321,39 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                             }
                             
                             if enemiesLeft == 0 {
-                                for node in sk.children {
-                                    if node.name!.contains("game") {
-                                        node.removeFromParent()
-                                    } else if node.name! == "endScreenWin" {
-                                        node.isHidden = false
+                                for node in skShapeNodesSet {
+                                    if node.name! == "endScreenWin" {
+                                        sk.addChild(node)
                                     }
                                 }
+                                for node in skLabelNodesSet {
+                                    if node.name! == "endScreenWin" {
+                                        sk.addChild(node)
+                                    }
+                                }
+                                for node in skSpriteNodesSet {
+                                   if node.name! == "endScreenWin" {
+                                        sk.addChild(node)
+                                    }
+                                }
+                                
                                 gameStage += 1
                             }
                         }
-                        else if tappedNode!.name!.contains("gun") {
-                            allNodesSet.remove(tappedNode!)
+                        else if tappedNode.name!.contains("gun") {
+                            allNodesSet.remove(tappedNode)
                             DispatchQueue.main.async {
-                                tappedNode!.removeFromParentNode()
+                                tappedNode.removeFromParentNode()
                             }
-                            for node in skSpriteNodesSet {
+                            for node in self.skSpriteNodesSet {
                                 if node.name == "gameHand" {
                                     node.removeFromParent()
-                                    skSpriteNodesSet.remove(node)
+                                    self.skSpriteNodesSet.remove(node)
                                 }
                                 if node.name == "gameHandGun" {
-                                    sk.addChild(node)
+                                    self.sk.addChild(node)
                                 }
                             }
-                            
                             self.hasGun += 1
                             self.ammoCount += 2
                             for node in skLabelNodesSet {
@@ -335,10 +362,10 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                                 }
                             }
                         }
-                        else if tappedNode!.name!.contains("ammoBox") {
-                            allNodesSet.remove(tappedNode!)
+                        else if tappedNode.name!.contains("ammoBox") {
+                            allNodesSet.remove(tappedNode)
                             DispatchQueue.main.async {
-                                tappedNode!.removeFromParentNode()
+                                tappedNode.removeFromParentNode()
                             }
                             self.ammoCount += 2
                             for node in skLabelNodesSet {
