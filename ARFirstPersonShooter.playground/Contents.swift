@@ -6,29 +6,22 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
     let session = ARSession()
     var sceneView: ARSCNView!
     var size:CGRect!
-    
-    var numberOfEnemies = 1;
-    var enemyPlacedCount = 0;
-    var enemiesLeft = 1;
-    var numberOfGuns = 1;
-    var gunsPlacedCount = 0;
-    var numberOfAmmoBoxes = 1;
-    var ammoBoxPlacedCount = 0;
-    
-    var allNodesSet = Set<SCNNode>()
-    var ammoBoxSet = Set<SCNNode>()
-    
     var sk:SKScene!
-    var skLabel:SKLabelNode!
-    var skAmmoLabel:SKLabelNode!
+    var allNodesSet = Set<SCNNode>()
+    var skLabelNodesSet = Set<SKLabelNode>()
+    var skSpriteNodesSet = Set<SKSpriteNode>()
+
+    var numberOfEnemies = 2
+    var enemyPlacedCount = 0
+    var enemiesLeft = 2
+    var numberOfGuns = 1
+    var gunsPlacedCount = 0
+    var numberOfAmmoBoxes = 1
+    var ammoBoxPlacedCount = 0
     var ammoCount = 0
     var hasGun = 0
-    var handLeft:SKSpriteNode!
-    var handRight:SKSpriteNode!
-    var timeRemaining:SKLabelNode!
     var timeCount = 0
     var timeRemainingCount = 150
-    
     var gameStage = 0
     
     override func loadView() {
@@ -46,15 +39,16 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         let welcomeLabel = SKLabelNode(text: "Welcome to my WWDC Submission")
         welcomeLabel.fontColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
         welcomeLabel.fontName =  "Helvetica"
-        welcomeLabel.fontSize = 27
+        welcomeLabel.fontSize = 25
         welcomeLabel.name = "startScreen"
-        welcomeLabel.position = CGPoint(x: size.width / 2, y: size.height - 70)
+        welcomeLabel.position = CGPoint(x: size.width / 2, y: size.height - 50)
         sk.addChild(welcomeLabel)
         
         let contentLabel = SKLabelNode(text: "This is an Augmented Reality First Person Shooter game in which you need to kill all of the aliens before time runs out. Here is how you are going to do that:\n\n" +
                                               "Start by scanning your surroundings by rotating the iPad around you slowly. Then the game will start!\n\n" +
-                                              "The first task is to pick up a gun to shoot the aliens with! Look around you, there will be one hidden! Then aim and get close to shoot. Your gun doesn't have a long range!\n\n" +
-                                              "If you run out of ammo, look around for an ammo box to refill.\n\n" +
+                                              "The first task is to pick up a gun to shoot the aliens with! Look around you, there will be one hidden! Get very close and tap to pick it up. Then aim and get up close to the alien and shoot by tapping on the enmy. Your gun doesn't have a long range!\n\n" +
+                                              "If you run out of ammo, look around for an ammo box to refill. Get very close to the ammo box and then tap to pick it up\n\n" +
+                                              "You only get penalized for time, so don't be worried to get close to the alien!\n\n" +
                                               "Tap anywhere to begin")
         contentLabel.fontColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
         contentLabel.fontName =  "Helvetica"
@@ -63,7 +57,7 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         contentLabel.numberOfLines = 0
         contentLabel.preferredMaxLayoutWidth = 470
         contentLabel.name = "startScreen"
-        contentLabel.position = CGPoint(x: size.width / 2, y: size.height - 480)
+        contentLabel.position = CGPoint(x: size.width / 2, y: size.height - 560)
         sk.addChild(contentLabel)
         
         
@@ -100,8 +94,6 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         loseLabel.position = CGPoint(x: size.width / 2, y: size.height / 2)
         sk.addChild(loseLabel)
         
-        
-        
         let config = ARWorldTrackingConfiguration()
         config.planeDetection = .horizontal
 
@@ -117,13 +109,14 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         cameraNode.position = SCNVector3(x: 0, y: 0, z: 3)
         scene.rootNode.addChildNode(cameraNode)
         
-        skLabel = SKLabelNode(text: "Keep Scanning Surroundings")
-        skLabel.fontColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
-        skLabel.fontName =  "Helvetica"
-        skLabel.position = CGPoint(x: 240, y: 300)
-        skLabel.isHidden = true
-        skLabel.name = "game"
-        sk.addChild(skLabel)
+        let keepScanningLabel = SKLabelNode(text: "Keep Scanning Surroundings")
+        keepScanningLabel.fontColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
+        keepScanningLabel.fontName =  "Helvetica"
+        keepScanningLabel.position = CGPoint(x: 240, y: 300)
+        keepScanningLabel.isHidden = true
+        keepScanningLabel.name = "gameKeepScanning"
+        sk.addChild(keepScanningLabel)
+        skLabelNodesSet.insert(keepScanningLabel)
         
         let topBar = SKShapeNode(rectOf: CGSize(width: size.width, height: 25))
         topBar.fillColor = SKColor.white
@@ -132,36 +125,45 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         topBar.isHidden = true
         sk.addChild(topBar)
         
-        skAmmoLabel = SKLabelNode(text: "Ammo: 0")
+        let skAmmoLabel = SKLabelNode(text: "Ammo: 0")
         skAmmoLabel.fontColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
         skAmmoLabel.fontName =  "Helvetica"
         skAmmoLabel.fontSize = 17
         skAmmoLabel.position = CGPoint(x: size.width - 50, y: size.height - 20)
         skAmmoLabel.isHidden = true
-        skAmmoLabel.name = "game"
+        skAmmoLabel.name = "gameAmmoLabel"
         sk.addChild(skAmmoLabel)
-        
-        timeRemaining = SKLabelNode(text: "Time Left: " + String(timeRemainingCount) + "   Enemies Left: " + String(enemiesLeft))
+        skLabelNodesSet.insert(skAmmoLabel)
+
+        let timeRemaining = SKLabelNode(text: "Time Left: " + String(timeRemainingCount) + "   Enemies Left: " + String(enemiesLeft))
         timeRemaining.fontColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
         timeRemaining.fontName =  "Helvetica"
         timeRemaining.fontSize = 17
         timeRemaining.position = CGPoint(x: 130, y: size.height - 20)
         timeRemaining.isHidden = true
-        timeRemaining.name = "game"
+        timeRemaining.name = "gameTimeRemaining"
         sk.addChild(timeRemaining)
-        
-        handLeft = SKSpriteNode(imageNamed: "Art.scnassets/images/handLeft.png")
+        skLabelNodesSet.insert(timeRemaining)
+
+        let handLeft = SKSpriteNode(imageNamed: "Art.scnassets/images/handLeft.png")
         handLeft.position = CGPoint(x: 70, y: 150)
         handLeft.isHidden = true
-        handLeft.name = "game"
+        handLeft.name = "gameHand"
         sk.addChild(handLeft)
-        
-        handRight = SKSpriteNode(imageNamed: "Art.scnassets/images/handRight.png")
+        skSpriteNodesSet.insert(handLeft)
+
+        let handRight = SKSpriteNode(imageNamed: "Art.scnassets/images/handRight.png")
         handRight.position = CGPoint(x: size.width - 70, y: 150)
         handRight.isHidden = true
-        handRight.name = "game"
+        handRight.name = "gameHand"
         sk.addChild(handRight)
+        skSpriteNodesSet.insert(handRight)
         
+        let handGun = SKSpriteNode(imageNamed: "Art.scnassets/images/gunHolding.png")
+        handGun.position = CGPoint(x: 70, y: 150)
+        handGun.name = "gameHandGun"
+        skSpriteNodesSet.insert(handGun)
+
         sceneView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(rec:)))
         sceneView.addGestureRecognizer(tap)
@@ -186,25 +188,26 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                     let box = self.ammoBoxNode("ammoBox " + String(ammoBoxPlacedCount))
                     box.position = SCNVector3(anchor.transform.columns.3.x, anchor.transform.columns.3.y, anchor.transform.columns.3.z)
                     self.allNodesSet.insert(box)
-                    self.ammoBoxSet.insert(box)
                     self.ammoBoxPlacedCount += 1
-                    
-                    if self.ammoBoxPlacedCount == self.numberOfAmmoBoxes {
-                        skLabel.removeFromParent()
-                        
+                }
+                
+                if self.ammoBoxPlacedCount == self.numberOfAmmoBoxes {
+                    for node in skLabelNodesSet {
+                        if node.name == "gameKeepScanning" {
+                            skLabelNodesSet.remove(node)
+                            node.removeFromParent()
+                        }
+                    }
+                    let startGameLabel = SKLabelNode(text: "BEGIN")
+                    startGameLabel.position = CGPoint(x: size.width / 2, y: size.height / 2)
+                    startGameLabel.name = "startLabel"
+                    startGameLabel.fontName =  "Helvetica"
+                    startGameLabel.fontSize = 30
+                    sk.addChild(startGameLabel)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        startGameLabel.removeFromParent()
                         for node in self.allNodesSet {
-                            let startGameLabel = SKLabelNode(text: "BEGIN")
-                            startGameLabel.position = CGPoint(x: size.width / 2, y: size.height / 2)
-                            startGameLabel.name = "startLabel"
-                            startGameLabel.fontName =  "Helvetica"
-                            startGameLabel.fontSize = 30
-                            sk.addChild(startGameLabel)
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                                startGameLabel.removeFromParent()
-                            }
-                            if (!node.name!.contains("ammoBox")) {
-                                self.sceneView.scene.rootNode.addChildNode(node)
-                            }
+                            self.sceneView.scene.rootNode.addChildNode(node)
                         }
                     }
                 }
@@ -218,11 +221,15 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
             if timeCount >= 60 {
                 timeCount -= 60
                 timeRemainingCount -= 1
-                timeRemaining.text = "Time Left: " + String(timeRemainingCount) + "   Enemies Left: " + String(enemiesLeft)
-
+                for node in skLabelNodesSet {
+                    if node.name == "gameTimeRemaining" {
+                        node.text = "Time Left: " + String(timeRemainingCount) + "   Enemies Left: " + String(enemiesLeft)
+                    }
+                }
+                
                 if timeRemainingCount == 0 {
                     for node in sk.children {
-                        if node.name! == "game" {
+                        if node.name!.contains("game") {
                             node.removeFromParent()
                         } else if node.name! == "endScreenLose" {
                             node.isHidden = false
@@ -232,12 +239,11 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                 }
             }
             for node in self.allNodesSet {
-                if node != nil && node.name!.contains("enemy") {
+                if node.name!.contains("enemy") {
                     let yaw = sceneView.session.currentFrame?.camera.eulerAngles.y
                     node.eulerAngles.y = yaw!
                     node.position.x = node.position.x + 0.001*sin(yaw!)
                     node.position.y = node.position.y + 0.001*cos(yaw!)
-                    
                 }
             }
         }
@@ -249,19 +255,23 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                 for node in sk.children {
                     if node.name! == "startScreen" {
                         node.removeFromParent()
-                    } else if node.name! == "game" {
+                    } else if node.name!.contains("game") {
                         node.isHidden = false
                     }
                 }
                 gameStage += 1
             }
             if gameStage == 1 && enemyPlacedCount >= numberOfEnemies && gunsPlacedCount >= numberOfGuns && ammoBoxPlacedCount >= numberOfAmmoBoxes {
+                print("a")
                 let location: CGPoint = rec.location(in: sceneView)
-                sceneView.session.currentFrame?.camera
                 
                 if self.hasGun >= 1 && self.ammoCount > 0 {
                     self.ammoCount -= 1
-                    skAmmoLabel.text = "Ammo: " + String(self.ammoCount)
+                    for node in skLabelNodesSet {
+                        if node.name == "gameAmmoLabel" {
+                            node.text = "Ammo: " + String(self.ammoCount)
+                        }
+                    }
                     
                     let shotNode = SKSpriteNode(imageNamed: "Art.scnassets/images/shot.png")
                     shotNode.position = CGPoint(x: 240, y: 310)
@@ -270,25 +280,30 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                         shotNode.removeFromParent()
                     }
-                    
-                    if self.ammoCount == 0 && self.ammoBoxSet.count > 0 {
-                        self.sceneView.scene.rootNode.addChildNode(self.ammoBoxSet.removeFirst())
-                    }
                 }
-                
+                print("b")
                 let hits = sceneView.hitTest(location, options: nil)
                 if !hits.isEmpty {
+                    print("c")
                     let tappedNode:SCNNode? = hits.last?.node
-                    if (allNodesSet.contains(tappedNode!)) {
+                    print(hits.count)
+                    if (tappedNode?.name != nil) {
+                        print("d")
                         if tappedNode!.name!.contains("enemy") && self.hasGun >= 1 && self.ammoCount > 0 {
                             allNodesSet.remove(tappedNode!)
+                            DispatchQueue.main.async {
+                                tappedNode!.removeFromParentNode()
+                            }
                             enemiesLeft -= 1
-                            timeRemaining.text = "Time Left: " + String(timeRemainingCount) + "   Enemies Left: " + String(enemiesLeft)
-                            tappedNode!.removeFromParentNode()
+                            for node in skLabelNodesSet {
+                                if node.name == "gameTimeRemaining" {
+                                    node.text = "Time Left: " + String(timeRemainingCount) + "   Enemies Left: " + String(enemiesLeft)
+                                }
+                            }
                             
                             if enemiesLeft == 0 {
                                 for node in sk.children {
-                                    if node.name! == "game" {
+                                    if node.name!.contains("game") {
                                         node.removeFromParent()
                                     } else if node.name! == "endScreenWin" {
                                         node.isHidden = false
@@ -299,23 +314,38 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                         }
                         else if tappedNode!.name!.contains("gun") {
                             allNodesSet.remove(tappedNode!)
-                            tappedNode!.removeFromParentNode()
-                            handLeft.removeFromParent()
-                            handRight.removeFromParent()
-                            
-                            let handGun = SKSpriteNode(imageNamed: "Art.scnassets/images/gunHolding.png")
-                            handGun.position = CGPoint(x: 70, y: 150)
-                            handGun.name = "game"
-                            sk.addChild(handGun)
+                            DispatchQueue.main.async {
+                                tappedNode!.removeFromParentNode()
+                            }
+                            for node in skSpriteNodesSet {
+                                if node.name == "gameHand" {
+                                    node.removeFromParent()
+                                    skSpriteNodesSet.remove(node)
+                                }
+                                if node.name == "gameHandGun" {
+                                    sk.addChild(node)
+                                }
+                            }
                             
                             self.hasGun += 1
                             self.ammoCount += 2
-                            skAmmoLabel.text = "Ammo: " + String(self.ammoCount)
-                        } else if tappedNode!.name!.contains("ammoBox") && self.hasGun >= 1 {
+                            for node in skLabelNodesSet {
+                                if node.name == "gameAmmoLabel" {
+                                    node.text = "Ammo: " + String(self.ammoCount)
+                                }
+                            }
+                        }
+                        else if tappedNode!.name!.contains("ammoBox") {
                             allNodesSet.remove(tappedNode!)
-                            tappedNode!.removeFromParentNode()
+                            DispatchQueue.main.async {
+                                tappedNode!.removeFromParentNode()
+                            }
                             self.ammoCount += 2
-                            skAmmoLabel.text = "Ammo: " + String(self.ammoCount)
+                            for node in skLabelNodesSet {
+                                if node.name == "gameAmmoLabel" {
+                                    node.text = "Ammo: " + String(self.ammoCount)
+                                }
+                            }
                         }
                     }
                 }
