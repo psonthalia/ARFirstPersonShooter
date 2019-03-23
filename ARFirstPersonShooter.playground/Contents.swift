@@ -1,5 +1,3 @@
-//: A SceneKit and ARKit based Playground
-
 import PlaygroundSupport
 import SceneKit
 import ARKit
@@ -73,15 +71,22 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         let bgBlack = SKShapeNode(rectOf: CGSize(width: size.width, height: size.height))
         bgBlack.fillColor = SKColor.black
         bgBlack.position = CGPoint(x: size.width / 2, y: size.height / 2)
-        bgBlack.name = "endScreen"
+        bgBlack.name = "endScreenWin"
         bgBlack.isHidden = true
         sk.addChild(bgBlack)
+        
+        let bgBlack2 = SKShapeNode(rectOf: CGSize(width: size.width, height: size.height))
+        bgBlack2.fillColor = SKColor.black
+        bgBlack2.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        bgBlack2.name = "endScreenLose"
+        bgBlack2.isHidden = true
+        sk.addChild(bgBlack2)
         
         let winLabel = SKLabelNode(text: "YOU HAVE WON!")
         winLabel.fontColor = UIColor(red: 0, green: 255, blue: 0, alpha: 1)
         winLabel.fontName =  "Helvetica"
         winLabel.fontSize = 27
-        winLabel.name = "endScreen"
+        winLabel.name = "endScreenWin"
         winLabel.isHidden = true
         winLabel.position = CGPoint(x: size.width / 2, y: size.height / 2)
         sk.addChild(winLabel)
@@ -120,9 +125,9 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         skLabel.name = "game"
         sk.addChild(skLabel)
         
-        let topBar = SKShapeNode(rectOf: CGSize(width: size.width, height: 20))
+        let topBar = SKShapeNode(rectOf: CGSize(width: size.width, height: 25))
         topBar.fillColor = SKColor.white
-        topBar.position = CGPoint(x: size.width / 2, y: size.height - 10)
+        topBar.position = CGPoint(x: size.width / 2, y: size.height - 12)
         topBar.name = "game"
         topBar.isHidden = true
         sk.addChild(topBar)
@@ -130,17 +135,17 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
         skAmmoLabel = SKLabelNode(text: "Ammo: 0")
         skAmmoLabel.fontColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
         skAmmoLabel.fontName =  "Helvetica"
-        skAmmoLabel.fontSize = 18
+        skAmmoLabel.fontSize = 17
         skAmmoLabel.position = CGPoint(x: size.width - 50, y: size.height - 20)
         skAmmoLabel.isHidden = true
         skAmmoLabel.name = "game"
         sk.addChild(skAmmoLabel)
         
-        timeRemaining = SKLabelNode(text: "Time Remaining: " + String(timeRemainingCount))
+        timeRemaining = SKLabelNode(text: "Time Left: " + String(timeRemainingCount) + "   Enemies Left: " + String(enemiesLeft))
         timeRemaining.fontColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
         timeRemaining.fontName =  "Helvetica"
-        timeRemaining.fontSize = 18
-        timeRemaining.position = CGPoint(x: 100, y: size.height - 20)
+        timeRemaining.fontSize = 17
+        timeRemaining.position = CGPoint(x: 130, y: size.height - 20)
         timeRemaining.isHidden = true
         timeRemaining.name = "game"
         sk.addChild(timeRemaining)
@@ -188,7 +193,15 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                         skLabel.removeFromParent()
                         
                         for node in self.allNodesSet {
-                            //SHOW A START MESSAGE
+                            let startGameLabel = SKLabelNode(text: "BEGIN")
+                            startGameLabel.position = CGPoint(x: size.width / 2, y: size.height / 2)
+                            startGameLabel.name = "startLabel"
+                            startGameLabel.fontName =  "Helvetica"
+                            startGameLabel.fontSize = 30
+                            sk.addChild(startGameLabel)
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                startGameLabel.removeFromParent()
+                            }
                             if (!node.name!.contains("ammoBox")) {
                                 self.sceneView.scene.rootNode.addChildNode(node)
                             }
@@ -205,7 +218,18 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
             if timeCount >= 60 {
                 timeCount -= 60
                 timeRemainingCount -= 1
-                timeRemaining.text = "Time Remaining: " + String(timeRemainingCount)
+                timeRemaining.text = "Time Left: " + String(timeRemainingCount) + "   Enemies Left: " + String(enemiesLeft)
+
+                if timeRemainingCount == 0 {
+                    for node in sk.children {
+                        if node.name! == "game" {
+                            node.removeFromParent()
+                        } else if node.name! == "endScreenLose" {
+                            node.isHidden = false
+                        }
+                    }
+                    gameStage += 1
+                }
             }
             for node in self.allNodesSet {
                 if node != nil && node.name!.contains("enemy") {
@@ -259,13 +283,14 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                         if tappedNode!.name!.contains("enemy") && self.hasGun >= 1 && self.ammoCount > 0 {
                             allNodesSet.remove(tappedNode!)
                             enemiesLeft -= 1
+                            timeRemaining.text = "Time Left: " + String(timeRemainingCount) + "   Enemies Left: " + String(enemiesLeft)
                             tappedNode!.removeFromParentNode()
                             
                             if enemiesLeft == 0 {
                                 for node in sk.children {
                                     if node.name! == "game" {
                                         node.removeFromParent()
-                                    } else if node.name! == "endScreen" {
+                                    } else if node.name! == "endScreenWin" {
                                         node.isHidden = false
                                     }
                                 }
