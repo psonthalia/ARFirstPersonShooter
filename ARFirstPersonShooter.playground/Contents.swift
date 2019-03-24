@@ -338,7 +338,6 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                         let tappedNode:SCNNode = hit.node
                         if let tappedName:String = tappedNode.name {
                             if tappedName.contains("enemy") && hasGun >= 1 && shot == true {
-//                                allNodesSet.remove(tappedNode)
                                 DispatchQueue.main.async {
                                     tappedNode.removeFromParentNode()
                                 }
@@ -365,7 +364,6 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                                 }
                             }
                             else if tappedName.contains("gun") {
-//                                self.allNodesSet.remove(tappedNode)
                                 DispatchQueue.main.async {
                                     tappedNode.removeFromParentNode()
                                 }
@@ -386,7 +384,6 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                                 }
                             }
                             else if tappedName.contains("ammoBox") {
-//                                allNodesSet.remove(tappedNode)
                                 DispatchQueue.main.async {
                                     tappedNode.removeFromParentNode()
                                 }
