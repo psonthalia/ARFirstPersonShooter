@@ -333,64 +333,66 @@ class QISceneKitViewController: UIViewController, ARSCNViewDelegate, ARSessionDe
                     }
                 }
                 let hits = sceneView.hitTest(location, options: [.boundingBoxOnly: true, .rootNode: sceneView.scene.rootNode])
-                for hit in hits {
-                    if (hit != nil && hit.node != nil) {
-                        let tappedNode:SCNNode = hit.node
-                        if let tappedName:String = tappedNode.name {
-                            if tappedName.contains("enemy") && hasGun >= 1 && shot == true {
-                                DispatchQueue.main.async {
-                                    tappedNode.removeFromParentNode()
-                                }
-                                enemiesLeft -= 1
-                                for node in skLabelNodesSet {
-                                    if node.name == "gameTimeEnemiesRemaining" {
-                                        node.text = "Time Left: " + String(timeRemainingCount) + "      Enemies Left: " + String(enemiesLeft)
+                if hits != nil && !hits.isEmpty {
+                    for hit in hits {
+                        if (hit != nil && hit.node != nil) {
+                            let tappedNode:SCNNode = hit.node
+                            if let tappedName:String = tappedNode.name {
+                                if tappedName.contains("enemy") && hasGun >= 1 && shot == true {
+                                    DispatchQueue.main.async {
+                                        tappedNode.removeFromParentNode()
+                                    }
+                                    enemiesLeft -= 1
+                                    for node in skLabelNodesSet {
+                                        if node.name == "gameTimeEnemiesRemaining" {
+                                            node.text = "Time Left: " + String(timeRemainingCount) + "      Enemies Left: " + String(enemiesLeft)
+                                        }
+                                    }
+                                    
+                                    if enemiesLeft == 0 {
+                                        for node in skShapeNodesSet {
+                                            if node.name! == "endScreenWin" {
+                                                sk.addChild(node)
+                                            }
+                                        }
+                                        for node in skLabelNodesSet {
+                                            if node.name! == "endScreenWin" {
+                                                sk.addChild(node)
+                                            }
+                                        }
+                                        
+                                        gameStage += 1
                                     }
                                 }
-                                
-                                if enemiesLeft == 0 {
-                                    for node in skShapeNodesSet {
-                                        if node.name! == "endScreenWin" {
+                                else if tappedName.contains("gun") {
+                                    DispatchQueue.main.async {
+                                        tappedNode.removeFromParentNode()
+                                    }
+                                    hasGun += 1
+                                    ammoCount += 2
+                                    for node in skSpriteNodesSet {
+                                        if node.name == "gameHand" {
+                                            node.removeFromParent()
+                                        }
+                                        if node.name == "gameHandGun" {
                                             sk.addChild(node)
                                         }
                                     }
                                     for node in skLabelNodesSet {
-                                        if node.name! == "endScreenWin" {
-                                            sk.addChild(node)
+                                        if node.name == "gameAmmoLabel" {
+                                            node.text = "Ammo: " + String(ammoCount)
                                         }
                                     }
-                                    
-                                    gameStage += 1
                                 }
-                            }
-                            else if tappedName.contains("gun") {
-                                DispatchQueue.main.async {
-                                    tappedNode.removeFromParentNode()
-                                }
-                                hasGun += 1
-                                ammoCount += 2
-                                for node in skSpriteNodesSet {
-                                    if node.name == "gameHand" {
-                                        node.removeFromParent()
+                                else if tappedName.contains("ammoBox") && hasGun > 0 {
+                                    DispatchQueue.main.async {
+                                        tappedNode.removeFromParentNode()
                                     }
-                                    if node.name == "gameHandGun" {
-                                        sk.addChild(node)
-                                    }
-                                }
-                                for node in skLabelNodesSet {
-                                    if node.name == "gameAmmoLabel" {
-                                        node.text = "Ammo: " + String(ammoCount)
-                                    }
-                                }
-                            }
-                            else if tappedName.contains("ammoBox") {
-                                DispatchQueue.main.async {
-                                    tappedNode.removeFromParentNode()
-                                }
-                                ammoCount += 2
-                                for node in skLabelNodesSet {
-                                    if node.name == "gameAmmoLabel" {
-                                        node.text = "Ammo: " + String(ammoCount)
+                                    ammoCount += 2
+                                    for node in skLabelNodesSet {
+                                        if node.name == "gameAmmoLabel" {
+                                            node.text = "Ammo: " + String(ammoCount)
+                                        }
                                     }
                                 }
                             }
